@@ -14,70 +14,8 @@ knitr::opts_chunk$set(echo = FALSE)
 ```
 
 ```{r Read Files}
-linkedin <- read.csv("postings.csv")
-benefits <- read.csv("jobs/benefits.csv")
-job_industries <- read.csv("jobs/job_industries.csv")
-job_skills <- read.csv("jobs/job_skills.csv")
-# The salaries info is already in postings.csv
-# salaries <- read.csv("jobs/salaries.csv")
-
-companies <- read.csv("companies/companies.csv")
-company_industries <- read.csv("companies/company_industries.csv")
+linkedin <- read.csv("linkedin.csv")
+companies <- read.csv("companies/companies_new.csv")
 company_specialities <- read.csv("companies/company_specialities.csv")
-employee_counts <- read.csv("companies/employee_counts.csv")
-
-industry_ids <- read.csv("mappings/industries.csv")
-skills_ids <- read.csv("mappings/skills.csv")
-```
-
-```{r Data Cleaning - Join DataFrames and Pivot}
-# Remove lines with empty industry names
-industry_ids <- industry_ids |>
-  filter(industry_name != "")
-
-# Connect industry IDs and skills abbreviations with job IDs
-# Pivot these DataFrames so that each row is one job posting
-job_industries <- job_industries |>
-  full_join(industry_ids, by = "industry_id") |>
-  select(-industry_id) |>
-  mutate(dummy = 1) |>
-  pivot_wider(
-    names_from = industry_name,
-    values_from = dummy,
-    values_fill = 0
-  )
-
-job_skills <- job_skills |>
-  full_join(skills_ids, by = "skill_abr") |>
-  select(-skill_abr) |>
-  mutate(dummy = 1) |>
-  pivot_wider(
-    names_from = skill_name,
-    values_from = dummy,
-    values_fill = 0
-  )
-
-benefits <- benefits |>
-  # The Inferred column talks about how the data was scraped, not needed
-  select(-inferred) |>
-  mutate(dummy = 1) |>
-  pivot_wider(
-    names_from = type,
-    values_from = dummy,
-    values_fill = 0
-  )
-
-# Join industries, skills, and benefits to each posting
-linkedin <- linkedin |>
-  full_join(job_industries, by = "job_id") |>
-  full_join(job_skills, by = "job_id") |>
-  full_join(benefits, by = "job_id")
-
-# Employee counts were measured at various times, convert Unix stamps
-employee_counts <- employee_counts |>
-  mutate(date = as.POSIXct(time_recorded, origin = "1970-01-01", tz = "UTC"))
-
-# Don't join employee counts and specialties because too big
-companies <- companies |>
-  full_join(company_industries, by = "company_id")
+employee_counts <- read.csv("companies/employee_counts_new.csv")
 ```
