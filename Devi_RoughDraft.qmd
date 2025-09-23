@@ -1,0 +1,20 @@
+---
+title: "36-613 Group EDA Rough Draft, Fall 2025"
+author: 
+- "Vaibhav Jha, Alex Hill, Avery Wang"
+subtitle: "Due Wednesday, September 24 by 11:59pm"
+format:
+  pdf:
+    colorlinks: true
+---
+
+```{r setup, include=F}
+library(tidyverse)
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r Read Files}
+linkedin <- read.csv("postings.csv")
+companies <- read.csv("companies/companies.csv") |>
+  full_join(read.csv("companies/company_industries.csv"), by = "company_id")
+```
