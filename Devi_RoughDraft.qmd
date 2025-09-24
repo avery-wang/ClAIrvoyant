@@ -74,3 +74,133 @@ linkedin |>
     title = "Companies with the Most Job Applications"
   )
 ```
+
+```{r Select top industries}
+top_industries <- c(
+  "IT Services and IT Consulting",
+  "Hospitals and Health Care",
+  "Software Development",
+  "Financial Services"
+)
+
+# Jobs only in top industries, one row per job
+good_job_industries <- job_industries |>
+  filter(industry_name %in% top_industries) |>
+  mutate(dummy = 1) |>
+  pivot_wider(
+    names_from = industry_name,
+    values_from = dummy,
+    values_fill = 0
+  ) |>
+  group_by(job_id) |>
+  mutate(
+    `IT Services and IT Consulting` = sum(`IT Services and IT Consulting`),
+    `Hospitals and Health Care` = sum(`Hospitals and Health Care`),
+    `Software Development` = sum(`Software Development`),
+    `Financial Services` = sum(`Financial Services`)
+  ) |>
+  select(-X) |>
+  distinct()
+
+# Get the most recent employee counts for each company
+recent_employee_counts <- employee_counts |>
+  group_by(company_id) |>
+  slice_max(time_recorded, n = 1) |>
+  select(-X)
+
+# Join industries and employee counts to LinkedIn, do inner join to keep only good jobs and companies in the database
+good_linkedin <- linkedin |>
+  inner_join(good_job_industries, by = "job_id") |>
+  inner_join(recent_employee_counts, by = "company_id") |>
+  # Filter more than 100 apps and more than 0 employees
+  filter(applies > 100) |>
+  filter(employee_count > 0)
+```
+
+```{r Number of Applications vs. Employee Counts, fig.width=8, fig.height=6}
+library(gridExtra)
+
+plot1 <- good_linkedin |>
+  ggplot(aes(x = employee_count, y = applies, color = as.factor(`IT Services and IT Consulting`))) +
+  geom_point() +
+  scale_x_log10() +
+  labs(
+    x = "Employee Count",
+    y = "Number of Applications",
+    color = "IT Services and\nIT Consulting"
+  )
+
+plot2 <- good_linkedin |>
+  ggplot(aes(x = employee_count, y = applies, color = as.factor(`Hospitals and Health Care`))) +
+  geom_point() +
+  scale_x_log10() +
+  labs(
+    x = "Employee Count",
+    y = "Number of Applications",
+    color = "Hospitals and\nHealth Care"
+  )
+
+plot3 <- good_linkedin |>
+  ggplot(aes(x = employee_count, y = applies, color = as.factor(`Software Development`))) +
+  geom_point() +
+  scale_x_log10() +
+  labs(
+    x = "Employee Count",
+    y = "Number of Applications",
+    color = "Software \nDevelopment"
+  )
+
+plot4 <- good_linkedin |>
+  ggplot(aes(x = employee_count, y = applies, color = as.factor(`Financial Services`))) +
+  geom_point() +
+  scale_x_log10() +
+  labs(
+    x = "Employee Count",
+    y = "Number of Applications",
+    color = "Financial\nServices"
+  )
+
+grid.arrange(plot1, plot2, plot3, plot4, ncol = 2, nrow = 2)
+```
+
+```{r}
+good_linkedin_summary <- good_linkedin |>
+  group_by(
+    company_name,
+    employee_count,
+    follower_count,
+    `IT Services and IT Consulting`,
+    `Hospitals and Health Care`,
+    `Software Development`,
+    `Financial Services`) |>
+  summarize(applications = sum(applies)) |>
+  ungroup() |>
+  
+  group_by(company_name) |>
+  mutate(
+    `IT Services and IT Consulting` = sum(`IT Services and IT Consulting`),
+    `Hospitals and Health Care` = sum(`Hospitals and Health Care`),
+    `Software Development` = sum(`Software Development`),
+    `Financial Services` = sum(`Financial Services`),
+    applications = sum(applications)
+  ) |>
+  distinct()
+
+good_linkedin_summary |>
+  ggplot(aes(x = employee_count, y = applications)) +
+  geom_point() +
+  scale_x_log10() +
+  labs(
+    x = "Employee Count", 
+    y = "Total Number of Applications"
+  )
+
+good_linkedin_summary |>
+  ggplot(aes(x = follower_count, y = applications)) +
+  geom_point() +
+  scale_x_log10() +
+  labs(
+    x = "Follower Count", 
+    y = "Total Number of Applications"
+  )
+```
