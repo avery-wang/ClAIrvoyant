@@ -26,7 +26,7 @@ employee_counts <- read.csv("companies/employee_counts_new.csv")
 job_industries |>
   group_by(industry_name) |>
   summarize(count = n()) |>
-  slice_max(count, n = 20) |>
+  slice_max(count, n = 10) |>
   ggplot(aes(x = fct_reorder(industry_name, count), y = count, fill = fct_reorder(industry_name, count))) +
   geom_bar(stat = "identity") +
   guides(x = guide_axis(angle = 45)) +
@@ -42,7 +42,7 @@ job_industries |>
 companies |>
   group_by(industry) |>
   summarize(count = n()) |>
-  slice_max(count, n = 20) |>
+  slice_max(count, n = 10) |>
   ggplot(aes(x = fct_reorder(industry, count), y = count, fill = fct_reorder(industry, count))) +
   geom_bar(stat = "identity") +
   guides(x = guide_axis(angle = 45)) +
@@ -63,7 +63,7 @@ linkedin |>
   filter(company_name != "") |>
   drop_na(applies) |>
   summarize(applications = sum(applies)) |>
-  slice_max(applications, n = 20) |>
+  slice_max(applications, n = 10) |>
   ggplot(aes(x = fct_reorder(company_name, applications), y = applications, fill = fct_reorder(company_name, applications))) +
   geom_bar(stat = "identity") +
   guides(x = guide_axis(angle = 45)) +
@@ -77,6 +77,7 @@ linkedin |>
 
 ```{r Select top industries}
 top_industries <- c(
+  "Staffing and Recruiting",
   "IT Services and IT Consulting",
   "Hospitals and Health Care",
   "Software Development",
@@ -160,7 +161,17 @@ plot4 <- good_linkedin |>
     color = "Financial\nServices"
   )
 
-grid.arrange(plot1, plot2, plot3, plot4, ncol = 2, nrow = 2)
+plot5 <- good_linkedin |>
+  ggplot(aes(x = employee_count, y = applies, color = as.factor(`Staffing and Recruiting`))) +
+  geom_point() +
+  scale_x_log10() +
+  labs(
+    x = "Employee Count",
+    y = "Number of Applications",
+    color = "Staffing and\nRecruiting"
+  )
+
+grid.arrange(plot1, plot2, plot3, plot4, plot5, ncol = 2, nrow = 3)
 ```
 
 ```{r}
@@ -192,7 +203,9 @@ good_linkedin_summary |>
   scale_x_log10() +
   labs(
     x = "Employee Count", 
-    y = "Total Number of Applications"
+    y = "Total Number of Applications",
+    title = "Number of Applications vs. Number of Company Employees",
+    subtitle = "Applications Across All Job Postings"
   )
 
 good_linkedin_summary |>
@@ -201,6 +214,8 @@ good_linkedin_summary |>
   scale_x_log10() +
   labs(
     x = "Follower Count", 
-    y = "Total Number of Applications"
+    y = "Total Number of Applications",
+    title = "Number of Applications vs. Number of Company LinkedIn Followers",
+    subtitle = "Applications Across All Job Postings"
   )
 ```

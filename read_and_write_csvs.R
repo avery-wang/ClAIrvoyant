@@ -57,8 +57,10 @@ linkedin <- linkedin |>
   full_join(benefits, by = "job_id")
 
 # Employee counts were measured at various times, convert Unix stamps
+# Join company name
 employee_counts <- employee_counts |>
-  mutate(date = as.POSIXct(time_recorded, origin = "1970-01-01", tz = "UTC"))
+  mutate(date = as.POSIXct(time_recorded, origin = "1970-01-01", tz = "UTC")) |>
+  full_join(companies |> select(company_id, name), by = "company_id")
 
 # Don't join employee counts and specialties because too big
 companies <- companies |>
