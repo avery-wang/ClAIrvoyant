@@ -16,6 +16,40 @@ knitr::opts_chunk$set(echo = FALSE)
 ```{r Read Files}
 linkedin <- read.csv("linkedin.csv")
 companies <- read.csv("companies/companies_new.csv")
+job_industries <- read.csv("jobs/job_industries_new.csv")
 company_specialities <- read.csv("companies/company_specialities.csv")
 employee_counts <- read.csv("companies/employee_counts_new.csv")
+```
+
+```{r Most popular industries in job postings}
+# Most popular industries in job postings
+job_industries |>
+  group_by(industry_name) |>
+  summarize(count = n()) |>
+  slice_max(count, n = 10) |>
+  ggplot(aes(x = fct_reorder(industry_name, count), y = count, fill = fct_reorder(industry_name, count))) +
+  geom_bar(stat = "identity") +
+  guides(x =  guide_axis(angle = 45)) +
+  theme(legend.position = "none") +
+  labs(
+    x = "Industry",
+    y = "Number of Job Postings",
+    title = "Industries with the Most Job Postings"
+  )
+```
+
+```{r Most companies in each industry}
+companies |>
+  group_by(industry) |>
+  summarize(count = n()) |>
+  slice_max(count, n = 10) |>
+  ggplot(aes(x = fct_reorder(industry, count), y = count, fill = fct_reorder(industry, count))) +
+  geom_bar(stat = "identity") +
+  guides(x =  guide_axis(angle = 45)) +
+  theme(legend.position = "none") +
+  labs(
+    x = "Industry",
+    y = "Number of Companies",
+    title = "Industries with the Most Companies"
+  )
 ```

@@ -29,13 +29,7 @@ industry_ids <- industry_ids |>
 # Pivot these DataFrames so that each row is one job posting
 job_industries <- job_industries |>
   full_join(industry_ids, by = "industry_id") |>
-  select(-industry_id) |>
-  mutate(dummy = 1) |>
-  pivot_wider(
-    names_from = industry_name,
-    values_from = dummy,
-    values_fill = 0
-  )
+  select(-industry_id)
 
 job_skills <- job_skills |>
   full_join(skills_ids, by = "skill_abr") |>
@@ -59,7 +53,6 @@ benefits <- benefits |>
 
 # Join industries, skills, and benefits to each posting
 linkedin <- linkedin |>
-  full_join(job_industries, by = "job_id") |>
   full_join(job_skills, by = "job_id") |>
   full_join(benefits, by = "job_id")
 
@@ -74,4 +67,5 @@ companies <- companies |>
 # Write all edited CSVs
 write.csv(linkedin, "linkedin.csv")
 write.csv(companies, "companies/companies_new.csv")
+write.csv(job_industries, "jobs/job_industries_new.csv")
 write.csv(employee_counts, "companies/employee_counts_new.csv")
