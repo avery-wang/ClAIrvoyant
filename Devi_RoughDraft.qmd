@@ -26,10 +26,10 @@ employee_counts <- read.csv("companies/employee_counts_new.csv")
 job_industries |>
   group_by(industry_name) |>
   summarize(count = n()) |>
-  slice_max(count, n = 10) |>
+  slice_max(count, n = 20) |>
   ggplot(aes(x = fct_reorder(industry_name, count), y = count, fill = fct_reorder(industry_name, count))) +
   geom_bar(stat = "identity") +
-  guides(x =  guide_axis(angle = 45)) +
+  guides(x = guide_axis(angle = 45)) +
   theme(legend.position = "none") +
   labs(
     x = "Industry",
@@ -42,14 +42,35 @@ job_industries |>
 companies |>
   group_by(industry) |>
   summarize(count = n()) |>
-  slice_max(count, n = 10) |>
+  slice_max(count, n = 20) |>
   ggplot(aes(x = fct_reorder(industry, count), y = count, fill = fct_reorder(industry, count))) +
   geom_bar(stat = "identity") +
-  guides(x =  guide_axis(angle = 45)) +
+  guides(x = guide_axis(angle = 45)) +
   theme(legend.position = "none") +
   labs(
     x = "Industry",
     y = "Number of Companies",
     title = "Industries with the Most Companies"
+  )
+```
+
+```{r Companies with most applications}
+# Looks like the places with the most job postings are recruiting places, probably not what we're looking for
+
+linkedin |>
+  group_by(company_name) |>
+    # Remove postings with no company name or unknown number of apps
+  filter(company_name != "") |>
+  drop_na(applies) |>
+  summarize(applications = sum(applies)) |>
+  slice_max(applications, n = 20) |>
+  ggplot(aes(x = fct_reorder(company_name, applications), y = applications, fill = fct_reorder(company_name, applications))) +
+  geom_bar(stat = "identity") +
+  guides(x = guide_axis(angle = 45)) +
+  theme(legend.position = "none") +
+  labs(
+    x = "Company",
+    y = "Number of Total Job Applications",
+    title = "Companies with the Most Job Applications"
   )
 ```
