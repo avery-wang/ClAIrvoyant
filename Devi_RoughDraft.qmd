@@ -174,6 +174,38 @@ plot5 <- good_linkedin |>
 grid.arrange(plot1, plot2, plot3, plot4, plot5, ncol = 2, nrow = 3)
 ```
 
+```{r Number of Applications vs. Employee Counts, Better, fig.width=8, fig.height=6}
+good_linkedin_long <- good_linkedin |>
+  select(company_name,
+         employee_count,
+         applies,
+         `IT Services and IT Consulting`,
+         `Hospitals and Health Care`,
+         `Software Development`,
+         `Financial Services`,
+         `Staffing and Recruiting`) |>
+  pivot_longer(
+    cols = c(-company_name, -employee_count, -applies),
+    names_to = "industry",
+    values_to = "value"
+  ) |>
+  filter(value == 1) |>
+  select(-value)
+
+good_linkedin_long |>
+  ggplot(aes(x = employee_count, y = applies, color = industry)) +
+  geom_point() +
+  scale_x_log10() +
+  labs(
+    x = "Employee Count",
+    y = "Number of Applications",
+    title = "Number of Applications vs. Number of Company Employees",
+    subtitle = "Applications Across Individual Job Postings",
+    color = "Industry"
+  ) +
+  theme(legend.position = c(0.8, 0.8))
+```
+
 ```{r}
 good_linkedin_summary <- good_linkedin |>
   group_by(
@@ -183,7 +215,8 @@ good_linkedin_summary <- good_linkedin |>
     `IT Services and IT Consulting`,
     `Hospitals and Health Care`,
     `Software Development`,
-    `Financial Services`) |>
+    `Financial Services`,
+    `Staffing and Recruiting`) |>
   summarize(applications = sum(applies)) |>
   ungroup() |>
   
@@ -193,6 +226,7 @@ good_linkedin_summary <- good_linkedin |>
     `Hospitals and Health Care` = sum(`Hospitals and Health Care`),
     `Software Development` = sum(`Software Development`),
     `Financial Services` = sum(`Financial Services`),
+    `Staffing and Recruiting` = sum(`Staffing and Recruiting`),
     applications = sum(applications)
   ) |>
   distinct()
