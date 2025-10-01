@@ -113,65 +113,9 @@ recent_employee_counts <- employee_counts |>
 good_linkedin <- linkedin |>
   inner_join(good_job_industries, by = "job_id") |>
   inner_join(recent_employee_counts, by = "company_id") |>
-  # Filter more than 100 apps and more than 0 employees
+  # Filter more than 100 apps and more than 1000 employees
   filter(applies > 100) |>
-  filter(employee_count > 0)
-```
-
-```{r Number of Applications vs. Employee Counts, fig.width=8, fig.height=6}
-library(gridExtra)
-
-plot1 <- good_linkedin |>
-  ggplot(aes(x = employee_count, y = applies, color = as.factor(`IT Services and IT Consulting`))) +
-  geom_point() +
-  scale_x_log10() +
-  labs(
-    x = "Employee Count",
-    y = "Number of Applications",
-    color = "IT Services and\nIT Consulting"
-  )
-
-plot2 <- good_linkedin |>
-  ggplot(aes(x = employee_count, y = applies, color = as.factor(`Hospitals and Health Care`))) +
-  geom_point() +
-  scale_x_log10() +
-  labs(
-    x = "Employee Count",
-    y = "Number of Applications",
-    color = "Hospitals and\nHealth Care"
-  )
-
-plot3 <- good_linkedin |>
-  ggplot(aes(x = employee_count, y = applies, color = as.factor(`Software Development`))) +
-  geom_point() +
-  scale_x_log10() +
-  labs(
-    x = "Employee Count",
-    y = "Number of Applications",
-    color = "Software \nDevelopment"
-  )
-
-plot4 <- good_linkedin |>
-  ggplot(aes(x = employee_count, y = applies, color = as.factor(`Financial Services`))) +
-  geom_point() +
-  scale_x_log10() +
-  labs(
-    x = "Employee Count",
-    y = "Number of Applications",
-    color = "Financial\nServices"
-  )
-
-plot5 <- good_linkedin |>
-  ggplot(aes(x = employee_count, y = applies, color = as.factor(`Staffing and Recruiting`))) +
-  geom_point() +
-  scale_x_log10() +
-  labs(
-    x = "Employee Count",
-    y = "Number of Applications",
-    color = "Staffing and\nRecruiting"
-  )
-
-grid.arrange(plot1, plot2, plot3, plot4, plot5, ncol = 2, nrow = 3)
+  filter(employee_count > 1000)
 ```
 
 ```{r Number of Applications vs. Employee Counts, Better, fig.width=8, fig.height=6}
@@ -195,6 +139,9 @@ good_linkedin_long <- good_linkedin |>
 good_linkedin_long |>
   ggplot(aes(x = employee_count, y = applies, color = industry)) +
   geom_point() +
+  geom_point(aes(x = 164739, y = 157),
+             size = 3,
+             color = "black") +
   scale_x_log10() +
   labs(
     x = "Employee Count",
@@ -217,7 +164,8 @@ good_linkedin_summary <- good_linkedin |>
     `Software Development`,
     `Financial Services`,
     `Staffing and Recruiting`) |>
-  summarize(applications = sum(applies)) |>
+  summarize(applications = sum(applies),
+            postings = n()) |>
   ungroup() |>
   
   group_by(company_name) |>
@@ -253,3 +201,16 @@ good_linkedin_summary |>
     subtitle = "Applications Across All Job Postings"
   )
 ```
+
+```{r Applications vs. Number of Postings}
+apps_and_postings <- good_linkedin_long |>
+  group_by(company_name) |>
+  summarize(applications = sum(applies),
+            postings = n())
+
+apps_and_postings |>
+  ggplot(aes(x = postings, y = applications)) +
+  geom_point()
+```
+
+https://finance.yahoo.com/news/concentrix-named-market-leader-digital-130500391.html
