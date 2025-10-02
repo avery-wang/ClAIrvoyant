@@ -122,6 +122,7 @@ good_linkedin <- linkedin |>
 good_linkedin_long <- good_linkedin |>
   select(company_name,
          employee_count,
+         follower_count,
          applies,
          `IT Services and IT Consulting`,
          `Hospitals and Health Care`,
@@ -129,19 +130,17 @@ good_linkedin_long <- good_linkedin |>
          `Financial Services`,
          `Staffing and Recruiting`) |>
   pivot_longer(
-    cols = c(-company_name, -employee_count, -applies),
+    cols = c(-company_name, -employee_count, -follower_count, -applies),
     names_to = "industry",
     values_to = "value"
   ) |>
   filter(value == 1) |>
-  select(-value)
+  select(-value) |>
+  distinct()
 
 good_linkedin_long |>
   ggplot(aes(x = employee_count, y = applies, color = industry)) +
   geom_point() +
-  geom_point(aes(x = 164739, y = 157),
-             size = 3,
-             color = "black") +
   scale_x_log10() +
   labs(
     x = "Employee Count",
@@ -153,34 +152,23 @@ good_linkedin_long |>
   theme(legend.position = c(0.8, 0.8))
 ```
 
+
+
 ```{r}
-good_linkedin_summary <- good_linkedin |>
-  group_by(
-    company_name,
-    employee_count,
-    follower_count,
-    `IT Services and IT Consulting`,
-    `Hospitals and Health Care`,
-    `Software Development`,
-    `Financial Services`,
-    `Staffing and Recruiting`) |>
-  summarize(applications = sum(applies),
-            postings = n()) |>
-  ungroup() |>
-  
-  group_by(company_name) |>
-  mutate(
-    `IT Services and IT Consulting` = sum(`IT Services and IT Consulting`),
-    `Hospitals and Health Care` = sum(`Hospitals and Health Care`),
-    `Software Development` = sum(`Software Development`),
-    `Financial Services` = sum(`Financial Services`),
-    `Staffing and Recruiting` = sum(`Staffing and Recruiting`),
-    applications = sum(applications)
+good_linkedin_summary <- good_linkedin_long |>
+  mutate(dummy = 1) |>
+  pivot_wider(
+    names_from = industry,
+    values_from = dummy,
+    values_fill = 0
   ) |>
-  distinct()
+  group_by(company_name) |>
+  mutate(total_applications = sum(applies)) |>
+  mutate(postings = n()) |>
+  ungroup()
 
 good_linkedin_summary |>
-  ggplot(aes(x = employee_count, y = applications)) +
+  ggplot(aes(x = employee_count, y = total_applications)) +
   geom_point() +
   scale_x_log10() +
   labs(
@@ -191,7 +179,7 @@ good_linkedin_summary |>
   )
 
 good_linkedin_summary |>
-  ggplot(aes(x = follower_count, y = applications)) +
+  ggplot(aes(x = follower_count, y = total_applications)) +
   geom_point() +
   scale_x_log10() +
   labs(
@@ -202,15 +190,12 @@ good_linkedin_summary |>
   )
 ```
 
-```{r Applications vs. Number of Postings}
-apps_and_postings <- good_linkedin_long |>
-  group_by(company_name) |>
-  summarize(applications = sum(applies),
-            postings = n())
-
-apps_and_postings |>
-  ggplot(aes(x = postings, y = applications)) +
-  geom_point()
+```{r Pair Plot, fig.height=6, fig.width=8}
+library(GGally)
+good_linkedin_long |>
+  left_join(select(good_linkedin_summary, company_name, total_applications, postings)) |>
+  select(employee_count, applies, total_applications, postings, industry) |>
+  ggpairs(aes(color = industry, alpha = 0.3))
 ```
 
 https://finance.yahoo.com/news/concentrix-named-market-leader-digital-130500391.html
