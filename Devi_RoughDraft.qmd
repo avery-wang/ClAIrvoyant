@@ -21,20 +21,33 @@ company_specialities <- read.csv("companies/company_specialities.csv")
 employee_counts <- read.csv("companies/employee_counts_new.csv")
 ```
 
+```{r}
+linkedin |>
+  ggplot(aes(x = log(views), y = log(applies))) +
+  geom_point(size = 0.3) +
+  labs(
+    title = "Number of Applicants vs. Number of Views",
+    caption = "Figure 1: Number of applicants against the number of views for each job posting, plotted on a log scale."
+  ) +
+  theme(plot.caption = element_text(hjust = 0.5))
+```
+
 ```{r Most popular industries in job postings}
 # Most popular industries in job postings
 job_industries |>
   group_by(industry_name) |>
   summarize(count = n()) |>
   slice_max(count, n = 10) |>
-  ggplot(aes(x = fct_reorder(industry_name, count), y = count, fill = fct_reorder(industry_name, count))) +
+  ggplot(aes(x = fct_reorder(industry_name, count), y = count, fill = "#F8766D")) +
   geom_bar(stat = "identity") +
   guides(x = guide_axis(angle = 45)) +
-  theme(legend.position = "none") +
+  theme(legend.position = "none",
+        plot.caption = element_text(hjust = 0.5)) +
   labs(
     x = "Industry",
     y = "Number of Job Postings",
-    title = "Industries with the Most Job Postings"
+    title = "Industries with the Most Job Postings",
+    caption = "Figure 2: The ten industries with the most job postings."
   )
 ```
 
@@ -43,15 +56,28 @@ companies |>
   group_by(industry) |>
   summarize(count = n()) |>
   slice_max(count, n = 10) |>
-  ggplot(aes(x = fct_reorder(industry, count), y = count, fill = fct_reorder(industry, count))) +
+  ggplot(aes(x = fct_reorder(industry, count), y = count, fill = "#F8766D")) +
   geom_bar(stat = "identity") +
   guides(x = guide_axis(angle = 45)) +
-  theme(legend.position = "none") +
+  theme(legend.position = "none",
+        plot.caption = element_text(hjust = 0.5),
+        plot.margin = margin(10, 20, 20, 40)) +
   labs(
     x = "Industry",
     y = "Number of Companies",
-    title = "Industries with the Most Companies"
+    title = "Industries with the Most Companies",
+    caption = "Figure 3: The ten industries with the most distinct companies in the data."
   )
+```
+
+```{r Predict Applications}
+model <- lm(log(applies) ~ log(views), data = linkedin)
+linkedin <- linkedin |>
+  # If unknown number of applicants, predict based on views
+  mutate(applies = ifelse(is.na(applies),
+                          exp(predict(model, newdata = data.frame(views = views))),
+                          applies))
+
 ```
 
 ```{r Companies with most applications}
@@ -67,11 +93,13 @@ linkedin |>
   ggplot(aes(x = fct_reorder(company_name, applications), y = applications, fill = fct_reorder(company_name, applications))) +
   geom_bar(stat = "identity") +
   guides(x = guide_axis(angle = 45)) +
-  theme(legend.position = "none") +
+  theme(legend.position = "none",
+        plot.caption = element_text(hjust = 0.5)) +
   labs(
     x = "Company",
     y = "Number of Total Job Applications",
-    title = "Companies with the Most Job Applications"
+    title = "Companies with the Most Job Applications",
+    caption = "Figure 5: The ten companies with the most applications across all job postings in the data."
   )
 ```
 
@@ -146,10 +174,11 @@ good_linkedin_long |>
     x = "Employee Count",
     y = "Number of Applications",
     title = "Number of Applications vs. Number of Company Employees",
-    subtitle = "Applications Across Individual Job Postings",
-    color = "Industry"
+    color = "Industry",
+    caption = "Figure 7: Scatter plot of most recent employee count (log scale, minimum 1000)\nagainst the number of applicants to individual postings (minimum 100)."
   ) +
-  theme(legend.position = c(0.8, 0.8))
+  theme(legend.position = c(0.8, 0.8),
+        plot.caption = element_text(hjust = 0.5))
 ```
 
 
@@ -195,7 +224,13 @@ library(GGally)
 good_linkedin_long |>
   left_join(select(good_linkedin_summary, company_name, total_applications, postings)) |>
   select(employee_count, applies, total_applications, postings, industry) |>
-  ggpairs(aes(color = industry, alpha = 0.3))
+  ggpairs(aes(color = industry, alpha = 0.3),
+          upper = list(continuous = wrap("cor", size = 2))) +
+  theme(axis.text = element_text(size = 5),
+        plot.caption = element_text(hjust = 0.5)) +
+  labs(
+    caption = "Figure 8: Pair plot of summary table."
+  )
 ```
 
 https://finance.yahoo.com/news/concentrix-named-market-leader-digital-130500391.html
